@@ -6,7 +6,7 @@
  *   get_chain       — fetch isnad for a specific hadith ID
  *   grade_narrator  — get reliability data for a narrator
  *
- * Replace the stub API calls with your actual Hadith API.
+ * MOCK IMPLEMENTATION for development.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -15,19 +15,6 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-
-const API_BASE = process.env.HADITH_API_BASE_URL ?? "https://api.hadith.example.com";
-const API_KEY  = process.env.HADITH_API_KEY ?? "";
-
-async function apiGet(path: string, params: Record<string, string> = {}) {
-  const url = new URL(`${API_BASE}${path}`);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${API_KEY}` },
-  });
-  if (!res.ok) throw new Error(`Hadith API error: ${res.status}`);
-  return res.json();
-}
 
 const server = new Server(
   { name: "maktab-hadith", version: "0.1.0" },
@@ -79,26 +66,55 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     if (name === "search_hadith") {
-      const data = await apiGet("/v1/search", {
-        q: String(args?.query ?? ""),
-        collection: String(args?.collection ?? "all"),
-        limit: String(args?.limit ?? 10),
-      });
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            results: [
+              {
+                id: "1",
+                collection: "bukhari",
+                text: "MOCK: Innamal a'malu binniyat...",
+                chapter: "Book of Intentions",
+                grading: "Sahih"
+              },
+              {
+                id: "2",
+                collection: "muslim",
+                text: "MOCK: The Prophet (ﷺ) said...",
+                chapter: "Book of Faith",
+                grading: "Sahih"
+              }
+            ],
+            count: 2
+          }, null, 2)
+        }]
+      };
     }
 
     if (name === "get_chain") {
-      const data = await apiGet(`/v1/hadith/${args?.hadith_id}/chain`);
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            hadith_id: args?.hadith_id,
+            chain: ["Imam Bukhari", "Malik", "Nafi'", "Ibn Umar"]
+          }, null, 2)
+        }]
+      };
     }
 
     if (name === "grade_narrator") {
-      // Narrator grading is handled by the Rijal MCP server,
-      // but this stub shows how you'd delegate if needed
-      const data = await apiGet("/v1/rijal/search", {
-        name: String(args?.narrator_name ?? ""),
-      });
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            narrator_name: args?.narrator_name,
+            grade: "Thiqah (Reliable)",
+            era: "Tabi'un"
+          }, null, 2)
+        }]
+      };
     }
 
     throw new Error(`Unknown tool: ${name}`);
@@ -112,4 +128,4 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error("[mcp-hadith] server running on stdio");
+console.error("[mcp-hadith] server running on stdio (MOCK MODE)");

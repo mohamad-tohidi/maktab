@@ -5,6 +5,8 @@
  *   lookup_narrator  — find narrator by name, get bio + grades
  *   validate_chain   — assess a full isnad as an array of names
  *   get_biography    — detailed biography from classical rijal works
+ *
+ * MOCK IMPLEMENTATION for development.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -13,19 +15,6 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-
-const API_BASE = process.env.RIJAL_API_BASE_URL ?? "https://api.rijal.example.com";
-const API_KEY  = process.env.RIJAL_API_KEY ?? "";
-
-async function apiGet(path: string, params: Record<string, string> = {}) {
-  const url = new URL(`${API_BASE}${path}`);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${API_KEY}` },
-  });
-  if (!res.ok) throw new Error(`Rijal API error: ${res.status}`);
-  return res.json();
-}
 
 const server = new Server(
   { name: "maktab-rijal", version: "0.1.0" },
@@ -79,23 +68,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     if (name === "lookup_narrator") {
-      const data = await apiGet("/v1/narrator/search", {
-        name: String(args?.name ?? ""),
-      });
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            name: args?.name,
+            grade: "Thiqah (Reliable)",
+            era: "Tabi'un",
+            teachers: ["Imam Malik", "Nafi'"],
+            students: ["Imam al-Shafi'i"]
+          }, null, 2)
+        }]
+      };
     }
 
     if (name === "validate_chain") {
       const narrators = (args?.narrators as string[]) ?? [];
-      const data = await apiGet("/v1/chain/validate", {
-        narrators: narrators.join(","),
-      });
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            valid: true,
+            confidence: 0.95,
+            remarks: "Chain is continuous and narrators are reliable."
+          }, null, 2)
+        }]
+      };
     }
 
     if (name === "get_biography") {
-      const data = await apiGet(`/v1/narrator/${args?.narrator_id}/biography`);
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            narrator_id: args?.narrator_id,
+            biography: "MOCK: This is a detailed biography of the narrator from classical works..."
+          }, null, 2)
+        }]
+      };
     }
 
     throw new Error(`Unknown tool: ${name}`);
@@ -109,4 +119,4 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error("[mcp-rijal] server running on stdio");
+console.error("[mcp-rijal] server running on stdio (MOCK MODE)");
