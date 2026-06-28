@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Start everything for local development
 set -euo pipefail
 
+# Always run from the repo root (where .opencode/ lives)
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# Load .env
 if [ -f .env ]; then
   set -a; source .env; set +a
 fi
@@ -15,14 +14,13 @@ npm run build --workspace=packages/mcp-hadith
 npm run build --workspace=packages/mcp-rijal
 
 echo "→ Starting opencode server on :4096..."
-# OPENCODE_CONFIG points opencode to the project config file
-export OPENCODE_CONFIG="$ROOT/.opencode/opencode.json"
-opencode serve --port 4096 &
+# opencode auto-discovers .opencode/opencode.json when run from project root
+# --cors allows the Vite dev server at :5173 to make requests
+opencode serve --port 4096 --cors http://localhost:5173 &
 OPENCODE_PID=$!
 
-# Wait for opencode to be ready before starting Vite
 echo "→ Waiting for opencode to be ready..."
-for i in $(seq 1 20); do
+for i in $(seq 1 40); do
   if curl -sf http://localhost:4096/global/health > /dev/null 2>&1; then
     echo "  opencode is up!"
     break
@@ -41,6 +39,5 @@ echo "  OpenCode : http://localhost:4096"
 echo ""
 echo "  Ctrl+C to stop all"
 
-# Clean up on exit
 trap "kill $OPENCODE_PID $VITE_PID 2>/dev/null" EXIT
 wait
