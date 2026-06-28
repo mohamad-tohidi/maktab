@@ -6,8 +6,24 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // Proxy opencode API calls so the frontend doesn't need CORS config
-      "/v1": {
+      // Proxy all opencode API calls to avoid CORS in dev
+      "/session": {
+        target: "http://localhost:4096",
+        changeOrigin: true,
+      },
+      "/event": {
+        target: "http://localhost:4096",
+        changeOrigin: true,
+      },
+      "/global": {
+        target: "http://localhost:4096",
+        changeOrigin: true,
+      },
+      "/agent": {
+        target: "http://localhost:4096",
+        changeOrigin: true,
+      },
+      "/mcp": {
         target: "http://localhost:4096",
         changeOrigin: true,
       },

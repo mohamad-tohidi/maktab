@@ -2,9 +2,12 @@
 # Start everything for local development
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
 # Load .env
 if [ -f .env ]; then
-  export $(grep -v '^#' .env | xargs)
+  set -a; source .env; set +a
 fi
 
 echo "→ Building MCP servers..."
@@ -12,8 +15,20 @@ npm run build --workspace=packages/mcp-hadith
 npm run build --workspace=packages/mcp-rijal
 
 echo "→ Starting opencode server on :4096..."
-opencode serve --port 4096 --config .opencode/opencode.json &
+# OPENCODE_CONFIG points opencode to the project config file
+export OPENCODE_CONFIG="$ROOT/.opencode/opencode.json"
+opencode serve --port 4096 &
 OPENCODE_PID=$!
+
+# Wait for opencode to be ready before starting Vite
+echo "→ Waiting for opencode to be ready..."
+for i in $(seq 1 20); do
+  if curl -sf http://localhost:4096/global/health > /dev/null 2>&1; then
+    echo "  opencode is up!"
+    break
+  fi
+  sleep 0.5
+done
 
 echo "→ Starting Vite dev server on :5173..."
 npm run dev --workspace=apps/web &

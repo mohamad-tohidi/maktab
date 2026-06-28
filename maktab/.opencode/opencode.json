@@ -5,6 +5,23 @@
   "default_agent": "hadith",
   "autoupdate": false,
   "share": "disabled",
+  "server": {
+    "port": 4096,
+    "hostname": "127.0.0.1",
+    "cors": ["http://localhost:5173"]
+  },
+  "mcp": {
+    "hadith": {
+      "type": "local",
+      "command": ["node", "packages/mcp-hadith/dist/index.js"],
+      "enabled": true
+    },
+    "rijal": {
+      "type": "local",
+      "command": ["node", "packages/mcp-rijal/dist/index.js"],
+      "enabled": true
+    }
+  },
   "permission": {
     "edit": "ask",
     "bash": {
@@ -18,6 +35,5 @@
     ".opencode/skills/arabic-transliteration.md",
     ".opencode/skills/hadith-grading.md",
     ".opencode/skills/usul-al-fiqh.md"
-  ],
-  }
+  ]
 }

@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createSession, sendPrompt } from "./lib/opencode";
 
 /**
  * Maktab — root component
- *
- * Layout: sidebar (session list + agent picker) + main chat area.
- * This is a minimal scaffold — see components/ for each piece.
  */
 export default function App() {
   const [activeAgent, setActiveAgent] = useState<"hadith" | "fiqh" | "manuscript" | "translation">("hadith");
@@ -22,7 +20,7 @@ export default function App() {
       <aside style={{
         width: 220,
         background: "var(--bg-surface)",
-        borderLeft: "1px solid var(--border)",  /* RTL: border on left = right side visually */
+        borderLeft: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
         padding: "1rem 0",
@@ -78,29 +76,46 @@ export default function App() {
   );
 }
 
-/* ── Inline chat panel (extracted to components/ChatPanel.tsx later) ── */
+/* ── Chat panel ── */
 function ChatPanel({ agentId }: { agentId: string }) {
-  const [messages, setMessages] = useState<Array<{ role: "user"|"assistant"; text: string }>>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const prevAgent = useRef(agentId);
+
+  // Create a new session whenever the agent changes
+  useEffect(() => {
+    if (prevAgent.current !== agentId) {
+      setMessages([]);
+      setSessionId(null);
+      prevAgent.current = agentId;
+    }
+
+    let cancelled = false;
+    createSession(agentId).then(s => {
+      if (!cancelled) setSessionId(s.id);
+    }).catch(err => console.error("Failed to create session:", err));
+
+    return () => { cancelled = true; };
+  }, [agentId]);
 
   const send = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !sessionId) return;
     const text = input.trim();
     setInput("");
     setMessages(m => [...m, { role: "user", text }]);
     setLoading(true);
 
     try {
-      // Real implementation: POST to opencode server, then stream SSE
-      // See src/lib/opencode.ts for the SDK helpers
-      const res = await fetch("/v1/session/prompt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agent: agentId, text }),
-      });
-      const data = await res.json();
-      setMessages(m => [...m, { role: "assistant", text: data.text ?? "(no response)" }]);
+      // POST to the real opencode API (proxied through Vite)
+      const res = await sendPrompt(sessionId, text);
+      // Extract text from assistant parts
+      const assistantText = res.parts
+        ?.filter((p: any) => p.type === "text")
+        .map((p: any) => p.text)
+        .join("") ?? "(no response)";
+      setMessages(m => [...m, { role: "assistant", text: assistantText }]);
     } catch (e) {
       setMessages(m => [...m, { role: "assistant", text: `Error: ${String(e)}` }]);
     } finally {
@@ -115,7 +130,9 @@ function ChatPanel({ agentId }: { agentId: string }) {
         {messages.length === 0 && (
           <div style={{ textAlign: "center", marginTop: "20vh", color: "var(--text-3)" }}>
             <p style={{ fontSize: 32, fontFamily: "var(--font-arabic)", marginBottom: 8 }}>بسم الله</p>
-            <p style={{ fontSize: 13 }}>Select an agent and begin your research</p>
+            <p style={{ fontSize: 13 }}>
+              {sessionId ? "Select an agent and begin your research" : "Connecting to opencode…"}
+            </p>
           </div>
         )}
         {messages.map((m, i) => (
@@ -158,7 +175,8 @@ function ChatPanel({ agentId }: { agentId: string }) {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && !e.shiftKey && send()}
-          placeholder="Begin your research query…"
+          placeholder={sessionId ? "Begin your research query…" : "Connecting to opencode server…"}
+          disabled={!sessionId}
           style={{
             flex: 1,
             background: "var(--bg-card)",
@@ -169,20 +187,21 @@ function ChatPanel({ agentId }: { agentId: string }) {
             fontSize: 14,
             outline: "none",
             direction: "auto",
+            opacity: sessionId ? 1 : 0.5,
           }}
         />
         <button
           onClick={send}
-          disabled={loading || !input.trim()}
+          disabled={loading || !input.trim() || !sessionId}
           style={{
             padding: "0.65rem 1.25rem",
-            background: loading ? "var(--text-3)" : "var(--accent)",
+            background: loading || !sessionId ? "var(--text-3)" : "var(--accent)",
             color: "#0f0e0d",
             border: "none",
             borderRadius: "var(--radius)",
             fontWeight: 600,
             fontSize: 13,
-            cursor: loading ? "not-allowed" : "pointer",
+            cursor: loading || !sessionId ? "not-allowed" : "pointer",
           }}
         >
           ارسال
