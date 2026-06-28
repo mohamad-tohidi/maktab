@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-6",
+  "small_model": "anthropic/claude-haiku-4-5-20251001",
+  "default_agent": "hadith",
+  "autoupdate": false,
+  "share": "disabled",
+  "permission": {
+    "edit": "ask",
+    "bash": {
+      "*": "deny",
+      "curl *sunnah.com*": "allow",
+      "curl *quran.com*": "allow"
+    }
+  },
+  "instructions": [
+    ".opencode/AGENTS.md",
+    ".opencode/skills/arabic-transliteration.md",
+    ".opencode/skills/hadith-grading.md",
+    ".opencode/skills/usul-al-fiqh.md"
+  ],
+  "mcp": {
+    "servers": {
+      "hadith": {
+        "type": "stdio",
+        "command": "node",
+        "args": ["../../packages/mcp-hadith/dist/index.js"],
+        "env": {
+          "HADITH_API_BASE_URL": "${HADITH_API_BASE_URL}",
+          "HADITH_API_KEY": "${HADITH_API_KEY}"
+        }
+      },
+      "rijal": {
+        "type": "stdio",
+        "command": "node",
+        "args": ["../../packages/mcp-rijal/dist/index.js"],
+        "env": {
+          "RIJAL_API_BASE_URL": "${RIJAL_API_BASE_URL}",
+          "RIJAL_API_KEY": "${RIJAL_API_KEY}"
+        }
+      }
+    }
+  }
+}

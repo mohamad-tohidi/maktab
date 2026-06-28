@@ -1,0 +1,23 @@
+[package]
+name = "maktab"
+version = "0.1.0"
+description = "مکتب — Islamic Research Workbench"
+authors = ["Maktab Team"]
+edition = "2021"
+
+[lib]
+name = "maktab_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "maktab"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["shell-open"] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

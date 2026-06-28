@@ -1,0 +1,44 @@
+/* ── Maktab design tokens ─────────────────────────────── */
+:root {
+  --bg:          #0f0e0d;
+  --bg-surface:  #181714;
+  --bg-card:     #1f1c19;
+  --border:      #2e2b26;
+  --text-1:      #e8e0d5;
+  --text-2:      #a09080;
+  --text-3:      #5a5248;
+  --accent:      #c4a265;      /* warm gold — ink colour */
+  --accent-dim:  #7a6340;
+  --danger:      #a03030;
+  --font-arabic: "Noto Naskh Arabic", "Amiri", "Cairo", serif;
+  --font-ui:     "Geist", "Inter", system-ui, sans-serif;
+  --radius:      8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--font-ui);
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+
+/* Arabic text passages use the naskh font */
+.arabic {
+  font-family: var(--font-arabic);
+  font-size: 1.2em;
+  line-height: 2;
+  direction: rtl;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Selection */
+::selection { background: var(--accent-dim); color: var(--text-1); }

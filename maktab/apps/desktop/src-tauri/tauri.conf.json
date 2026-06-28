@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Maktab",
+  "identifier": "ai.maktab.app",
+  "version": "0.1.0",
+  "build": {
+    "frontendDist": "../../apps/web/dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "npm run build --workspace=apps/web"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "مکتب — Maktab",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:4096; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "wix": {
+        "language": "en-US"
+      }
+    }
+  }
+}

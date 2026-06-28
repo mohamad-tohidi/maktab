@@ -1,0 +1,3 @@
+# Place the opencode binary here for bundling.
+# During development, opencode is expected to be on PATH.
+# For production builds, run: scripts/bundle-opencode.sh
